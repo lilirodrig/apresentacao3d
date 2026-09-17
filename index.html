@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação 3D Interactiva</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            font-family: sans-serif;
+        }
+        /* Garante que o modelo ocupe a tela cheia do celular */
+        model-viewer {
+            width: 100%;
+            height: 100%;
+        }
+        /* Estilo elegante para o botão de carregar */
+        #ar-button {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+    <!-- Importa o componente oficial do Google -->
+    <script type="module" src="https://googleapis.com"></script>
+</head>
+<body>
+
+    <!-- Atributos ar, ar-modes e xr-environment ativam a mágica do AR/VR -->
+    <model-viewer 
+        src="modelo.glb" 
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        xr-environment
+        camera-controls 
+        touch-action="pan-y"
+        shadow-intensity="1" 
+        auto-rotate>
+        
+        <button slot="ar-button" id="ar-button">
+            👋 VER NO SEU ESPAÇO (AR/VR)
+        </button>
+    </model-viewer>
+
+</body>
+</html>
