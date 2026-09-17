@@ -3,46 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apresentação 3D Interactiva</title>
+    <title>Apresentação 3D</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #f0f0f0;
-            font-family: sans-serif;
-        }
-        /* Garante que o modelo ocupe a tela cheia do celular */
-        model-viewer {
-            width: 100%;
-            height: 100%;
-        }
-        /* Estilo elegante para o botão de carregar */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #f8f9fa; font-family: sans-serif; }
+        model-viewer { width: 100%; height: 100%; }
+        
         #ar-button {
-            position: absolute;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background-color: #007bff; color: white; border: none; padding: 14px 28px;
+            border-radius: 28px; font-size: 16px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; /* Só aparece quando o 3D carregar */
+        }
+        
+        /* Barra de progresso visível para o público saber que está carregando */
+        #progress-bar {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 18px; color: #555; text-align: center;
         }
     </style>
-    <!-- Importa o componente oficial do Google -->
     <script type="module" src="https://googleapis.com"></script>
 </head>
 <body>
 
-    <!-- Atributos ar, ar-modes e xr-environment ativam a mágica do AR/VR -->
+    <div id="progress-bar">Carregando modelo 3D... Por favor, aguarde.</div>
+
     <model-viewer 
+        id="meu-modelo"
         src="modelo.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
@@ -52,10 +38,25 @@
         shadow-intensity="1" 
         auto-rotate>
         
-        <button slot="ar-button" id="ar-button">
-            👋 VER NO SEU ESPAÇO (AR/VR)
-        </button>
+        <button slot="ar-button" id="ar-button">👋 VER NO SEU ESPAÇO (AR/VR)</button>
     </model-viewer>
 
+    <script>
+        const modelViewer = document.querySelector('#meu-modelo');
+        const progressBar = document.querySelector('#progress-bar');
+        const arButton = document.querySelector('#ar-button');
+
+        // Quando o modelo terminar de baixar, esconde o texto e mostra o botão AR
+        modelViewer.addEventListener('load', () => {
+            progressBar.style.display = 'none';
+            arButton.style.display = 'block';
+        });
+
+        // Caso dê erro no link do arquivo, avisa na tela
+        modelViewer.addEventListener('error', (error) => {
+            progressBar.innerText = "❌ Erro ao carregar o arquivo 3D. Verifique se o nome do arquivo no GitHub é exatamente 'modelo.glb'.";
+            console.error(error);
+        });
+    </script>
 </body>
 </html>
