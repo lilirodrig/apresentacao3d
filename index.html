@@ -2,43 +2,199 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apresentação 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f1115">
+    <title>Visualização 3D</title>
+
+    <!-- Biblioteca model-viewer do Google (CDN oficial, versão fixa) -->
+    <script type="module"
+            src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background-color: #fcfcfc; font-family: sans-serif; 
+        :root {
+            --bg: #0f1115;
+            --bg-soft: #1a1e27;
+            --fg: #f5f7fa;
+            --muted: #9aa4b2;
+            --accent: #2f7dff;
         }
-        model-viewer { 
-            width: 100%; height: 100%; display: block;
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 35%, var(--bg-soft) 0%, var(--bg) 70%);
+            color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overscroll-behavior: none;
         }
+
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            --poster-color: transparent;
+        }
+
+        /* ---- Botão de Realidade Aumentada ---- */
         #ar-button {
-            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
-            background-color: #007bff; color: white; border: none; padding: 14px 28px;
-            border-radius: 28px; font-size: 16px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 999;
+            position: absolute;
+            bottom: max(24px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 14px 26px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: .2px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(47, 125, 255, .35);
+            -webkit-tap-highlight-color: transparent;
         }
+        #ar-button:active { transform: translateX(-50%) scale(.97); }
+
+        /* ---- Barra de progresso do carregamento ---- */
+        .progress-bar {
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            max-width: 280px;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            overflow: hidden;
+        }
+        .progress-bar.hide { visibility: hidden; transition: visibility .3s; }
+        .progress-bar .update-bar {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--accent);
+            transition: width .25s;
+        }
+
+        /* ---- Dica de interação ---- */
+        #hint {
+            position: absolute;
+            top: max(18px, env(safe-area-inset-top));
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .08);
+            backdrop-filter: blur(8px);
+            color: var(--muted);
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity .6s;
+        }
+        #hint.hide { opacity: 0; }
+
+        /* ---- Mensagem de erro (em vez de tela branca silenciosa) ---- */
+        #error {
+            display: none;
+            position: absolute;
+            inset: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 24px;
+            text-align: center;
+        }
+        #error.show { display: flex; }
+        #error h1 { margin: 0; font-size: 18px; font-weight: 600; }
+        #error p { margin: 0; max-width: 420px; color: var(--muted); font-size: 14px; line-height: 1.5; }
     </style>
-    
-    <!-- Link corrigido e direto para evitar qualquer erro de CORS -->
-    <script type="module" src="https://unpkg.com"></script>
 </head>
 <body>
 
-    <!-- O src modificado para buscar localmente sem se perder no GitHub -->
-    <model-viewer 
-        src="./modelo.glb" 
-        ar 
-        ar-modes="webxr scene-viewer quick-look" 
-        camera-controls 
+    <model-viewer id="viewer"
+        src="modelo.glb"
+        alt="Modelo 3D interativo"
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        ar-scale="auto"
+        xr-environment
+        camera-controls
         touch-action="pan-y"
-        shadow-intensity="1" 
-        auto-rotate>
-        
+        auto-rotate
+        auto-rotate-delay="800"
+        rotation-per-second="18deg"
+        interaction-prompt="none"
+        shadow-intensity="1"
+        shadow-softness="0.8"
+        environment-image="neutral"
+        exposure="1"
+        loading="eager">
+
         <button slot="ar-button" id="ar-button">
-            👋 VER NO SEU ESPAÇO (AR/VR)
+            👋 Ver no seu espaço (AR)
         </button>
+
+        <div class="progress-bar" slot="progress-bar">
+            <div class="update-bar"></div>
+        </div>
     </model-viewer>
+
+    <div id="hint">Arraste para girar · pince para aproximar</div>
+
+    <div id="error">
+        <h1>Não foi possível carregar o modelo</h1>
+        <p id="error-msg"></p>
+    </div>
+
+    <script>
+        var viewer  = document.getElementById('viewer');
+        var hint    = document.getElementById('hint');
+        var errBox  = document.getElementById('error');
+        var errMsg  = document.getElementById('error-msg');
+
+        function fail(msg) {
+            errMsg.textContent = msg;
+            errBox.classList.add('show');
+            hint.classList.add('hide');
+        }
+
+        // 1) Se a CDN principal falhar, tenta uma alternativa antes de desistir.
+        window.addEventListener('load', function () {
+            if (customElements.get('model-viewer')) return;
+            var fallback = document.createElement('script');
+            fallback.type = 'module';
+            fallback.src  = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js';
+            fallback.onerror = function () {
+                fail('A biblioteca de visualização 3D não pôde ser baixada. Verifique sua conexão com a internet.');
+            };
+            document.head.appendChild(fallback);
+        });
+
+        // 2) O arquivo modelo.glb não foi encontrado ou está corrompido.
+        viewer.addEventListener('error', function (e) {
+            fail('O arquivo "modelo.glb" não foi encontrado no servidor ou não pôde ser lido. ' +
+                 'Confirme que ele está publicado na mesma pasta desta página.');
+            console.error('model-viewer error:', e.detail);
+        });
+
+        // 3) Esconde a dica assim que o usuário interage (ou após 5s).
+        viewer.addEventListener('load', function () {
+            setTimeout(function () { hint.classList.add('hide'); }, 5000);
+        });
+        ['pointerdown', 'touchstart'].forEach(function (ev) {
+            viewer.addEventListener(ev, function () { hint.classList.add('hide'); }, { once: true });
+        });
+    </script>
 
 </body>
 </html>
